@@ -14,11 +14,5 @@ ENV APP_DIR /var/www/html
 
 COPY --from=builder /tmp/main/aws $APP_DIR/extensions/AWS
 
-# RUN apt-get update \
-#  && apt-get install -y --no-install-recommends composer \
-#  && rm -rf /var/lib/apt/lists/* \
-#  && cd $APP_DIR/extensions \
-#  && git clone --depth 1 https://github.com/edwardspec/mediawiki-aws-s3-stable-fork.git AWS \
-#  && cd $APP_DIR/extensions/AWS \
-#  && composer install
-
+RUN docker-php-ext-install sockets \
+ && docker-php-ext-enable sockets
