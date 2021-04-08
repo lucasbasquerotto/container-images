@@ -15,14 +15,14 @@ function adminer_object(): Adminer {
 
         private function readFileContent(string $file): string {
             $handle = null;
+            $result = '';
 
             try {
-                $handle = fopen(file, "r");
-                $result = '';
+                $handle = fopen($file, "r");
 
                 if ($handle) {
                     while (($line = fgets($handle)) !== false) {
-                        $result = $result . $line . '\n';
+                        $result .= $line;
                     }
                 } else {
                     throw new Exception('file could not be opened: ' . $file);
@@ -32,6 +32,8 @@ function adminer_object(): Adminer {
                     fclose($handle);
                 }
             }
+
+            return $result;
         }
 
         public function loginForm(): void {
@@ -40,7 +42,7 @@ function adminer_object(): Adminer {
             if ($this->getEnv('ADMINER_AUTOLOGIN')) {
                 echo script('
                     document.addEventListener(\'DOMContentLoaded\', function () {
-                        document.forms[0].submit()
+                        setTimeout(function() { document.forms[0].submit(); }, 500)
                     })
                 ');
             }
@@ -65,12 +67,12 @@ function adminer_object(): Adminer {
             $pass = $this->getEnv('ADMINER_PASSWORD');
             $passFile = $this->getEnv('ADMINER_PASSWORD_FILE');
 
-            // if ($passFile) {
-            //     $passFilePath = if (strncmp($passFile, "/", 1) === 0)
-            //         ? ('/run/secrets/' . $passFile)
-            //         : $passFile;
-            //     $pass = $this.readFileContent($passFilePath);
-            // }
+            if ($passFile) {
+                $passFilePath = (strncmp($passFile, "/", 1) === 0)
+                    ? $passFile
+                    : ('/run/secrets/' . $passFile);
+                $pass = $this->readFileContent($passFilePath);
+            }
 
             switch ($key) {
                 case 'db': return $this->getEnv('ADMINER_DB');
