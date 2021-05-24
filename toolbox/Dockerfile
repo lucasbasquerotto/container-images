@@ -5,6 +5,7 @@ RUN apt-get update \
     awscli \
     bind9-host \
     curl \
+    dnsutils \
     iproute2 \
     iputils-ping \
     jq \
