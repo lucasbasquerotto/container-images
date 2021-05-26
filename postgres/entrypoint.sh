@@ -38,9 +38,10 @@ fi
 if [ "$1" = 'postgres' ]; then
 	# Check wal-e variables
 	wal_enable=true
-	VARS=(S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY WALE_S3_PREFIX S3_REGION)
-	for v in "${VARS[@]}"; do
-		if [ "${!v}" = "" ]; then
+	REQUIRED_VARS=(S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY WALE_S3_PREFIX S3_REGION)
+
+	for v in "${REQUIRED_VARS[@]}"; do
+		if [ -z "${!v}" ]; then
 			echo "$v is required for Wal-E but not set. Skipping Wal-E setup."
 			wal_enable=false
 		fi
@@ -48,15 +49,25 @@ if [ "$1" = 'postgres' ]; then
 
 	# Setup wal-e env variables
 	if [ "$wal_enable" = true ]; then
-		for v in "${VARS[@]}"; do
-			export $v="${!v}"
+		TMP_VARS=( "${REQUIRED_VARS[@]}" WALE_S3_ENDPOINT )
+		VARS=()
+
+		for v in "${TMP_VARS[@]}"; do
+			if [ -n "${!v}" ]; then
+				VARS+=( "$v" )
+			fi
 		done
+
+		for v in "${VARS[@]}"; do
+			export "$v"="${!v}"
+		done
+
 		WAL_LEVEL=archive
 		ARCHIVE_MODE=on
 	fi
 
 	# Update postgresql configuration
-	update_conf $wal_enable
+	update_conf "$wal_enable"
 
 	# Run the postgresql entrypoint
 	docker-entrypoint.sh postgres
