@@ -38,7 +38,7 @@ fi
 if [ "$1" = 'postgres' ]; then
 	# Check wal-e variables
 	wal_enable=true
-	REQUIRED_VARS=(S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY WALE_S3_PREFIX S3_REGION)
+	REQUIRED_VARS=( S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY WALE_S3_PREFIX S3_REGION )
 
 	for v in "${REQUIRED_VARS[@]}"; do
 		if [ -z "${!v}" ]; then
