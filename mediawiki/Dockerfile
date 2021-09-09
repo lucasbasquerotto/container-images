@@ -6,7 +6,7 @@ RUN mkdir /tmp/main \
  && cd /tmp/main/aws \
  && composer install
 
-FROM mediawiki:1.35.1
+FROM mediawiki:1.36.1
 
 USER root
 

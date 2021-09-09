@@ -1,0 +1,53 @@
+#!/bin/bash
+set -eou pipefail
+
+dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+function error {
+	echo -e "[error] $(date '+%F %T') - ${BASH_SOURCE[0]}:${BASH_LINENO[0]}: ${*}" >&2
+	exit 2
+}
+
+# shellcheck disable=SC2214
+while getopts ':-:' OPT; do
+	if [ "$OPT" = "-" ]; then     # long option: reformulate OPT and OPTARG
+		OPT="${OPTARG%%=*}"       # extract long option name
+		OPTARG="${OPTARG#$OPT}"   # extract long option argument (may be empty)
+		OPTARG="${OPTARG#=}"      # if long option argument, remove assigning `=`
+	fi
+	case "$OPT" in
+		image ) arg_image="${OPTARG:-}";;
+		remote ) arg_remote="${OPTARG:-}";;
+		??* ) error "Illegal option --$OPT" ;;  # bad long option
+		\? )  exit 2 ;;  # bad short option (error reported via getopts)
+	esac
+done
+shift $((OPTIND-1))
+
+if [ -z "${arg_image:-}" ]; then
+    error "specify the parameter 'image' (directory name in which the Dockerfile is located)"
+fi
+
+if [ -z "${arg_remote:-}" ]; then
+    error "specify the parameter 'remote' (remote image with tag)"
+fi
+
+directory="${dir}/${arg_image:-}"
+file="$directory/Dockerfile"
+local_image="local/${arg_image:-}"
+
+if [ ! -f "$file" ]; then
+    error "file not found: $file"
+fi
+
+echo "$(date '+%F %T') starting..." >&2
+cd "$dir"
+
+echo "$(date '+%F %T') create local image $local_image" >&2
+docker build -f "$file" -t "$local_image" "$directory"
+
+echo "$(date '+%F %T') push image to $arg_remote" >&2
+docker image tag "$local_image" "$arg_remote"
+docker image push "$arg_remote"
+
+echo "$(date '+%F %T') end"
